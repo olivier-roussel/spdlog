@@ -47,6 +47,12 @@ option(SPDLOG_BUILD_HO_TESTS "Build tests using the header only version" OFF)
 option(SPDLOG_SANITIZE_ADDRESS "Enable address sanitizer in tests" OFF)
 option(SPDLOG_INSTALL "Generate the install target." ${SPDLOG_MASTER_PROJECT})
 option(SPDLOG_FMT_EXTERNAL "Use external fmt library instead of bundled" OFF)
+option(SPDLOG_BUILD_SHARED "Build shared lib" ON)
+if (SPDLOG_BUILD_SHARED)
+  set(BUILD_SHARED_LIBS ON)
+else()
+  set(BUILD_SHARED_LIBS OFF)
+endif()
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
@@ -127,12 +133,14 @@ if (SPDLOG_INSTALL)
     set(config_targets_file "spdlogConfigTargets.cmake")
     set(version_config_file "${CMAKE_CURRENT_BINARY_DIR}/spdlogConfigVersion.cmake")
     set(export_dest_dir "${CMAKE_INSTALL_LIBDIR}/spdlog/cmake")
+    set(pkgconfig_install_dir "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+    set(pkg_config "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc")
 
     #---------------------------------------------------------------------------------------
     # Include files
     #---------------------------------------------------------------------------------------
     install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-    install(TARGETS spdlog spdlog_header_only EXPORT spdlog DESTINATION "${CMAKE_INSTALL_LIBDIR}/spdlog")
+    install(TARGETS spdlog spdlog_header_only EXPORT spdlog DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
     #---------------------------------------------------------------------------------------
     # Package and version files
@@ -148,6 +156,14 @@ if (SPDLOG_INSTALL)
     install(FILES
             "${project_config_out}"
             "${version_config_file}" DESTINATION "${export_dest_dir}")
+
+    #---------------------------------------------------------------------------------------
+    # Pkg-config files
+    #---------------------------------------------------------------------------------------
+    configure_file("cmake/spdlog.pc.in" "${pkg_config}" @ONLY)
+    install(FILES
+            "${pkg_config}"
+            DESTINATION "${pkgconfig_install_dir}")
 
     #---------------------------------------------------------------------------------------
     # Support creation of installable packages
